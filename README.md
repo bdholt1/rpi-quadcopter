@@ -89,18 +89,36 @@ The ros2_v4l2_camera driver allows a lot of control over the camera, check it ou
 
 ## GPIO
 
+GPIO should be easy on the RPi and an initial search for GPIO on Raspberry Pi on Ubuntu finds [this](https://ubuntu.com/tutorials/gpio-on-raspberry-pi#1-overview). Unfortunately this tutorial assumes 21.04 but we've installed 20.04 (for ROS2 LTS support).
 
+Reading through [many](https://www.raspberrypi.org/forums/viewtopic.php?t=289084) [answers](https://raspberrypi.stackexchange.com/questions/40105/access-gpio-pins-without-root-no-access-to-dev-mem-try-running-as-root/40106) we find that we need to create a group that is permissioned to access /dev/gpiomem. This group already existing on Raspbian but not on Ubuntu 20.04. /dev/gpiomem is the part of memory where the GPIO bits map to the actual hardware. We do this as follows by creating a new `gpio` group, adding the current user to that group, giving the group ownership rights to /dev/gpiomem and then allowing group read/write access to /dev/gpiomem.  A reboot is required for the new group and permissions to take effect.
 
+```
+$ sudo groupadd gpio
+$ sudo usermod -a -G gpio $USER
+$ sudo chown root:gpio /dev/gpiomem
+$ sudo chmod g+rw /dev/gpiomem
+$ reboot
+``` 
 
+we [can test](https://www.raspberrypi.org/forums/viewtopic.php?t=190662#p1197592) that we have access to the without requiring sudo rights by running 
+```
+$ echo "18" > /sys/class/gpio/export 
+$ echo "out" > /sys/class/gpio/gpio18/direction
+$ echo "1" > /sys/class/gpio/gpio18/value
+```
 
+Now we will install RPi.GPIO, an easy to use Python library for controlling the GPIO pins.
+```
+$ sudo pip3 install RPi.GPIO
+```
+And check that it works
+```
+$ python3 -c 'import RPi.GPIO as GPIO; print(dir(GPIO))'
+['BCM', 'BOARD', 'BOTH', 'FALLING', 'HARD_PWM', 'HIGH', 'I2C', 'IN', 'LOW', 'OUT', 'PUD_DOWN', 'PUD_OFF', 'PUD_UP', 'PWM', 'RISING', 'RPI_INFO', 'RPI_REVISION', 'SERIAL', 'SPI', 'UNKNOWN', 'VERSION', '__builtins__', '__cached__', '__doc__', '__file__', '__loader__', '__name__', '__package__', '__path__', '__spec__', 'add_event_callback', 'add_event_detect', 'cleanup', 'event_detected', 'getmode', 'gpio_function', 'input', 'output', 'remove_event_detect', 'setmode', 'setup', 'setwarnings', 'wait_for_edge']
 
-
-
- 
-
-
-
-
-
-
+$ $ python3 -c 'import RPi.GPIO as GPIO; print(GPIO.VERSION)'
+0.7.0
+```
+With this working we will be able to create a ROS2 python node to read and write to the GPIO pins.
 
