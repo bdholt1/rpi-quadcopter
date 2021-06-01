@@ -111,4 +111,32 @@ $ echo 1 > /sys/class/gpio/gpio18/value
 $ echo 18 > /sys/class/gpio/unexport
 ```
 
+## I2C
+
+Since our sensors support i2c we can test that they are working by running the following:
+
+```
+$ sudo apt-get install i2c-tools
+```
+
+Since we are using Stemma-QT (also known as Qwiic or JST 4-pin SH) cables to connect the Adafruit sensors, we can attach the 4 cables to the GPIO.  [Convention](https://learn.adafruit.com/introducing-adafruit-stemma-qt/technical-specs) is that red is 3.3V, black is GND, blue is SDA (data) and yellow is SCL (clock). On the RPi 4, [SDA is GPIO 2 and SCL is GPIO3](https://pinout.xyz/pinout/i2c#).
+
+Plug in the sensor and then run
+```
+$ sudo i2cdetect -y 1
+```
+
+We can find out what the I2C adapter number is (each I2C device gets a unique number starting from 0) by running
+```
+$ i2cdetect -l
+i2c-1            i2c             bcm2835 (i2c@7e804000)                          I2C Adapter
+```
+
+We will need to install libi2c to communicate with the device
+
+```
+$ sudo apt-get install libi2c-dev
+```
+
+
 
