@@ -3,7 +3,6 @@ project(altitude_controller)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(Eigen3 REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -12,12 +11,9 @@ add_executable(altitude_controller_node src/altitude_controller_node.cpp)
 target_include_directories(altitude_controller_node
         PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<BUILD_INTERFACE:${EIGEN3_INCLUDE_DIR}>
   $<INSTALL_INTERFACE:include>)
 
-
 ament_target_dependencies(altitude_controller_node
-        "Eigen3"
         "rclcpp"
         "sensor_msgs"
         "std_msgs")
