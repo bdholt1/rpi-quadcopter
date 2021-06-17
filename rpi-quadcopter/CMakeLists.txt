@@ -3,9 +3,27 @@ project(rpi-quadcopter)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
+
+add_executable(setpoint_node src/setpoint.cpp)
+target_include_directories(setpoint_node
+        PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>)
+
+ament_target_dependencies(setpoint_node
+        "rclcpp"
+        "std_msgs")
+
+target_compile_options(setpoint_node PRIVATE -Werror)
+target_compile_features(setpoint_node PRIVATE cxx_std_14)
+
+install(TARGETS setpoint_node
+        DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
