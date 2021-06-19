@@ -35,14 +35,35 @@ private:
     Eigen::Quaterniond q(msg->orientation.w, msg->orientation.x, msg->orientation.y, msg->orientation.z);
     auto euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
 
+    double roll = euler[0];
+    double pitch = euler[1];
+    double yaw = euler[2];
+
+    std::string message1 = "w=" + std::to_string(q.w()) + ", x= " + std::to_string(q.x()) +
+      ", y= " + std::to_string(q.y()) + ", z= " + std::to_string(q.z());
+    RCLCPP_INFO(this->get_logger(), "Incoming quaternion '%s'", message1.c_str());
+
+    std::string message2 = "roll=" + std::to_string(roll) + ", pitch= " + std::to_string(pitch) + ", yaw= " + std::to_string(yaw);
+    RCLCPP_INFO(this->get_logger(), "Converted euler angles '%s'", message2.c_str());
+
+    Eigen::Quaterniond q2 = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX()) *
+      Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
+      Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
+
+    std::string message3 = "w=" + std::to_string(q2.w()) + ", x= " + std::to_string(q2.x()) +
+      ", y= " + std::to_string(q2.y()) + ", z= " + std::to_string(q2.z());
+    RCLCPP_INFO(this->get_logger(), "Converted quaternion '%s'\n", message3.c_str());
+
+    constexpr double pi = 3.14159256535897932384;
+
     auto roll_msg = std_msgs::msg::Float64();
-    roll_msg.data = euler[0];
+    roll_msg.data = roll;
 
     auto pitch_msg = std_msgs::msg::Float64();
-    pitch_msg.data = euler[1];
+    pitch_msg.data = pitch;
 
     auto yaw_msg = std_msgs::msg::Float64();
-    yaw_msg.data = euler[2];
+    yaw_msg.data = yaw;
 
     auto roll_rate_msg = std_msgs::msg::Float64();
     roll_rate_msg.data = msg->angular_velocity.x;
