@@ -58,15 +58,18 @@ def generate_launch_description():
 
     altitude_controller = generate_pid_controller('altitude', 'altitude', 5.0, 0.0, 0.0, 0.0, 250.0)
 
-    imu_rpy = Node(package='imu_rpy', executable='imu_rpy_node', name='imu_rpy')
+    imu_rpy = Node(package='imu_rpy', executable='imu_rpy_node', name='imu_rpy',
+        remappings=[
+            ('imu', '/imu/data')
+        ])
 
     roll_controller = generate_pid_controller('attitude', 'roll', 5.0, 0.0, 0.0, -250.0, 250.0)
     pitch_controller = generate_pid_controller('attitude', 'pitch', 5.0, 0.0, 0.0, -250.0, 250.0)
     yaw_controller = generate_pid_controller('attitude', 'yaw', 5.0, 0.0, 0.0, -250.0, 250.0)
 
-    roll_rate_controller = generate_rate_pid_controller('roll', 5.0, 0.0, 0.0, -250.0, 250.0)
-    pitch_rate_controller = generate_rate_pid_controller('pitch', 5.0, 0.0, 0.0, -250.0, 250.0)
-    yaw_rate_controller = generate_rate_pid_controller('yaw', 5.0, 0.0, 0.0, -250.0, 250.0)
+    roll_rate_controller = generate_rate_pid_controller('roll', 0.5, 0.0, 0.0, -250.0, 250.0)
+    pitch_rate_controller = generate_rate_pid_controller('pitch', 0.5, 0.0, 0.0, -250.0, 250.0)
+    yaw_rate_controller = generate_rate_pid_controller('yaw', 0.5, 0.0, 0.0, -250.0, 250.0)
 
     quadcopter_motor_controller = Node(package='quadcopter_motor_controller', executable='quadcopter_motor_controller_node',
         name='quadcopter_motor_controller',
