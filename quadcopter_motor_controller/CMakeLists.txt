@@ -13,7 +13,13 @@ find_package(std_msgs REQUIRED)
 add_executable(quadcopter_motor_controller_node src/quadcopter_motor_controller_node.cpp)
 target_include_directories(quadcopter_motor_controller_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:/usr/local/include>
   $<INSTALL_INTERFACE:include>)
+
+add_library(pigpio SHARED IMPORTED)
+set_target_properties(pigpio PROPERTIES IMPORTED_LOCATION /usr/local/lib/libpigpiod_if2.so)
+
+target_link_libraries(quadcopter_motor_controller_node pigpio)
 
 ament_target_dependencies(quadcopter_motor_controller_node
         "rclcpp"

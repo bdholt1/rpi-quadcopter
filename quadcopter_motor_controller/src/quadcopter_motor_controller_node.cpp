@@ -4,6 +4,8 @@
 #include <iostream>
 #include <mutex>
 
+#include <pigpiod_if2.h>
+
 #include "rclcpp/time.hpp"
 #include "rclcpp/rclcpp.hpp"
 
@@ -42,19 +44,33 @@ public:
     this->get_parameter("motor_back_gpio", motor_back_gpio_);
     this->get_parameter("motor_left_gpio", motor_left_gpio_);
 
+    // connect to the local pigpio daemon on localhost and default port
+    pi_ = pigpio_start(NULL, NULL);
+    
     long kPWMFrequency = 50;
-    //pi.set_PWM_frequency(motor_front_gpio_, kPWMFrequency)
-    //pi.set_PWM_frequency(motor_right_gpio_, kPWMFrequency);
-    //pi.set_PWM_frequency(motor_back_gpio_, kPWMFrequency);
-    //pi.set_PWM_frequency(motor_left_gpio_, kPWMFrequency);
+    int result;
+    result = set_PWM_frequency(pi_, motor_front_gpio_, kPWMFrequency);
+    result = set_PWM_frequency(pi_, motor_right_gpio_, kPWMFrequency);
+    result = set_PWM_frequency(pi_, motor_back_gpio_, kPWMFrequency);
+    result = set_PWM_frequency(pi_, motor_left_gpio_, kPWMFrequency);
 
     long kPWMRange = 40000;
-    //pi.set_PWM_range(motor_front_gpio_, kPWMRange)
-    //pi.set_PWM_range(motor_right_gpio_, kPWMRange);
-    //pi.set_PWM_range(motor_back_gpio_, kPWMRange);
-    //pi.set_PWM_range(motor_left_gpio_, kPWMRange);
+    result = set_PWM_range(pi_, motor_front_gpio_, kPWMRange);
+    result = set_PWM_range(pi_, motor_right_gpio_, kPWMRange);
+    result = set_PWM_range(pi_, motor_back_gpio_, kPWMRange);
+    result = set_PWM_range(pi_, motor_left_gpio_, kPWMRange);
   }
 
+
+  ~QuadcopterMotorController()
+  {
+    set_PWM_dutycycle(pi_, motor_front_gpio_, 0);
+    set_PWM_dutycycle(pi_, motor_right_gpio_, 0);
+    set_PWM_dutycycle(pi_, motor_back_gpio_, 0);
+    set_PWM_dutycycle(pi_, motor_left_gpio_, 0);
+
+    pigpio_stop(pi_);
+  }
 private:
   void timer_callback()
   {
@@ -73,12 +89,12 @@ private:
     // the ESC accepts a PWM signal at 50Hz (20ms)
     // the motor is at 0% throttle at a 5% dutycycle (1ms over 20ms)
     // the motor is at 100% throttle at a 10% dutycycle (2ms over 20ms)
-    long kPWMLow = 2000;
-    long kPWMHigh = 4000;
-    //pi.set_PWM_dutycycle(motor_front_gpio_, map(motor_front, 0, 2000, kPWMLow, kPWMHigh));
-    //pi.set_PWM_dutycycle(motor_right_gpio_, map(motor_right, 0, 2000, kPWMLow, kPWMHigh));
-    //pi.set_PWM_dutycycle(motor_back_gpio_, map(motor_back, 0, 2000, kPWMLow, kPWMHigh));
-    //pi.set_PWM_dutycycle(motor_left_gpio_, map(motor_left, 0, 2000, kPWMLow, kPWMHigh));
+    long kPWMLow = 2000; // 40000 * 5%
+    long kPWMHigh = 4000; // 40000 * 10%
+    set_PWM_dutycycle(pi_, motor_front_gpio_, map(motor_front, 0, 2000, kPWMLow, kPWMHigh));
+    set_PWM_dutycycle(pi_, motor_right_gpio_, map(motor_right, 0, 2000, kPWMLow, kPWMHigh));
+    set_PWM_dutycycle(pi_, motor_back_gpio_, map(motor_back, 0, 2000, kPWMLow, kPWMHigh));
+    set_PWM_dutycycle(pi_, motor_left_gpio_, map(motor_left, 0, 2000, kPWMLow, kPWMHigh));
   }
 
   void thrust_callback(const std_msgs::msg::Float64::SharedPtr msg)
@@ -105,6 +121,7 @@ private:
     yaw_control_ = msg->data;
   }
 
+  int pi_;
   double thrust_control_, roll_control_,  pitch_control_, yaw_control_;
   unsigned short motor_front_gpio_, motor_right_gpio_, motor_back_gpio_, motor_left_gpio_;
   rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr thrust_sub_, roll_sub_, pitch_sub_, yaw_sub_;
