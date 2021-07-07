@@ -1,4 +1,4 @@
-#include <functional>
+#include <cmath>
 #include <memory>
 
 #include <Eigen/Geometry>
@@ -9,6 +9,38 @@
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
+
+double normaliseAngle(double x)
+{
+  x = fmod(x + M_PI, 2*M_PI);
+  if (x < 0)
+    x += 2*M_PI;
+  return x - M_PI;
+}
+
+Eigen::Vector3d ToEulerAngles(Eigen::Quaterniond q)
+{
+  Eigen::Vector3d angles;
+
+  // roll (x-axis rotation)
+  double sinr_cosp = 2 * (q.w() * q.x() + q.y() * q.z());
+  double cosr_cosp = 1 - 2 * (q.x() * q.x() + q.y() * q.y());
+  angles(0) = std::atan2(sinr_cosp, cosr_cosp);
+
+  // pitch (y-axis rotation)
+  double sinp = 2 * (q.w() * q.y() - q.z() * q.x());
+  if (std::abs(sinp) >= 1)
+    angles(1) = std::copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+  else
+    angles(1) = std::asin(sinp);
+
+  // yaw (z-axis rotation)
+  double siny_cosp = 2 * (q.w() * q.z() + q.x() * q.y());
+  double cosy_cosp = 1 - 2 * (q.y() * q.y() + q.z() * q.z());
+  angles(2) = std::atan2(siny_cosp, cosy_cosp);
+
+  return angles;
+}
 
 class Imu2rpy : public rclcpp::Node
 {
@@ -33,11 +65,12 @@ private:
   void imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg)
   {
     Eigen::Quaterniond q(msg->orientation.w, msg->orientation.x, msg->orientation.y, msg->orientation.z);
-    auto euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
+    //auto euler = q.toRotationMatrix().eulerAngles(2, 1, 0);
+    auto euler = ToEulerAngles(q);
 
-    double roll = euler[0];
-    double pitch = euler[1];
-    double yaw = euler[2];
+    double roll = euler(0);
+    double pitch = euler(1);	
+    double yaw = euler(2);
 
     //std::string message1 = "w=" + std::to_string(q.w()) + ", x= " + std::to_string(q.x()) +
     //  ", y= " + std::to_string(q.y()) + ", z= " + std::to_string(q.z());
