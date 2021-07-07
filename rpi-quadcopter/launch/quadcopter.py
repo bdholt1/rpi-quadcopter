@@ -3,13 +3,13 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 
-def generate_setpoint_node(name, setpoint):
+def generate_setpoint_node(name, setpoint_value):
    return Node(package='rpi-quadcopter', executable='setpoint_node', name=name,
         remappings=[
             ('setpoint', '/' + name)
         ],
         parameters=[
-            {"setpoint": setpoint}
+            {"setpoint_value": setpoint_value}
         ])
 
 def generate_pid_controller(namespace, base_name, Kp, Kd, Ki, lower_limit, upper_limit):
